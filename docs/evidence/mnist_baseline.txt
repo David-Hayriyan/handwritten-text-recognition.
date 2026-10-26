@@ -1,0 +1,24 @@
+Historical notebook output, retrieved 2026-10-27. Not rerun during portfolio preparation.
+
+=== Original cell 12 (1-based) ===
+[INFO] Загружаю MNIST...
+[INFO] Обучаю модель...
+Epoch 1/8
+422/422 - 39s - 92ms/step - accuracy: 0.9122 - loss: 0.2810 - val_accuracy: 0.9820 - val_loss: 0.0636
+Epoch 2/8
+422/422 - 36s - 86ms/step - accuracy: 0.9729 - loss: 0.0876 - val_accuracy: 0.9868 - val_loss: 0.0435
+Epoch 3/8
+422/422 - 37s - 87ms/step - accuracy: 0.9806 - loss: 0.0627 - val_accuracy: 0.9878 - val_loss: 0.0397
+Epoch 4/8
+422/422 - 41s - 98ms/step - accuracy: 0.9845 - loss: 0.0509 - val_accuracy: 0.9892 - val_loss: 0.0363
+Epoch 5/8
+422/422 - 41s - 96ms/step - accuracy: 0.9863 - loss: 0.0422 - val_accuracy: 0.9915 - val_loss: 0.0320
+Epoch 6/8
+422/422 - 37s - 87ms/step - accuracy: 0.9894 - loss: 0.0346 - val_accuracy: 0.9913 - val_loss: 0.0322
+Epoch 7/8
+422/422 - 37s - 88ms/step - accuracy: 0.9897 - loss: 0.0321 - val_accuracy: 0.9907 - val_loss: 0.0322
+Epoch 8/8
+422/422 - 41s - 97ms/step - accuracy: 0.9908 - loss: 0.0278 - val_accuracy: 0.9917 - val_loss: 0.0311
+[INFO] Точность на тесте: 0.9926
+[INFO] Ошибка на тесте: 0.0240
+[INFO] Модель сохранена в: mnist_cnn.keras

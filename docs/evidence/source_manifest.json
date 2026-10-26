@@ -1,0 +1,17 @@
+[
+  {
+    "source_name": "handwriting_recognition (1).ipynb",
+    "local_normalized_json_sha256": "e97153a6ef3664611dac7075114b950533d90f8113d24b13b9990f46e8f7bce0",
+    "evidence_file": "docs/evidence/emnist_june.txt"
+  },
+  {
+    "source_name": "handwriting_recognition.ipynb",
+    "local_normalized_json_sha256": "615c5ee26cc972698eb9b9811bb263dd887737f6a40a5be203302dd53571ba6b",
+    "evidence_file": "docs/evidence/emnist_may.txt"
+  },
+  {
+    "source_name": "digit_recognizer_colab_2.ipynb",
+    "local_normalized_json_sha256": "a93f137e280bd457f182b636dc61dcdb3bcf63037b06adc6acb1925c1a47fac9",
+    "evidence_file": "docs/evidence/mnist_baseline.txt"
+  }
+]
