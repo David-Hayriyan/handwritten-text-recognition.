@@ -1,107 +1,68 @@
-# Technical report
+# Технический отчёт
 
-## Problem and scope
+## Задача и область применения
 
-Classify an isolated handwritten digit or Latin character from a grayscale image.
-The project develops the original coursework into an inspectable ML workflow.
-It does not transcribe words, recognize Cyrillic, segment pages, or provide a
-production OCR service.
+Классификация отдельной рукописной цифры или латинской буквы по изображению в оттенках серого. Проект развивает исходную учебную работу в воспроизводимый процесс машинного обучения. Транскрипция слов, распознавание кириллицы, разбиение страницы на символы и промышленный OCR в него не входят.
 
-## Data and preparation
+## Данные и подготовка
 
-The default dataset is EMNIST Balanced: 47 classes, 112,800 official training
-examples, and 18,800 official test examples. The alternative is MNIST digits.
-See [NIST's dataset page](https://www.nist.gov/itl/products-and-services/emnist-dataset)
-and [Torchvision's loader](https://docs.pytorch.org/vision/stable/_modules/torchvision/datasets/mnist.html).
+Основной набор — EMNIST Balanced: 47 классов, 112 800 примеров в официальной обучающей выборке и 18 800 в тестовой. Альтернатива — MNIST с цифрами. Источники: [описание NIST](https://www.nist.gov/itl/products-and-services/emnist-dataset) и [загрузчик Torchvision](https://docs.pytorch.org/vision/stable/_modules/torchvision/datasets/mnist.html).
 
-A seeded stratified 10% holdout is made within the official training set.
-The raw storage is shared between two dataset views with different transforms.
-Only training gets random affine augmentation. Split indices are saved so the
-same examples can be used across experiments. The split is by image, not by
-writer; writer-level independence is not established by this implementation.
+Из официальной обучающей части стратифицированно откладывается 10% для валидации; seed фиксируется. Два представления данных используют общее исходное хранилище и разные преобразования. Случайные аугментации применяются только к обучению. Индексы разделения сохраняются для сопоставимости экспериментов. Разделение выполняется по изображениям, а не по авторам почерка; независимость по авторам этой реализацией не обеспечивается.
 
-Raw EMNIST samples are transposed into upright orientation. MNIST is already
-upright. Both use fixed MNIST normalization constants 0.1307/0.3081. The retained
-constants are a baseline design choice, not measured EMNIST statistics.
+Исходные изображения EMNIST транспонируются в обычную ориентацию. MNIST уже имеет нужную ориентацию. Оба набора используют фиксированные константы нормализации MNIST 0.1307/0.3081. Это сохранённый выбор базовой модели, а не статистики, измеренные по EMNIST.
 
-## Model and optimization
+## Модель и оптимизация
 
-The recovered network has five 3×3 convolution layers across 32-, 64-, and
-128-channel stages, BatchNorm, ReLU, max pooling, and dropout. A 1152→256→47
-classifier completes the EMNIST model (447,247 trainable parameters).
+Восстановленная сеть содержит пять свёрток 3×3 в блоках на 32, 64 и 128 каналов, BatchNorm, ReLU, MaxPool и dropout. Классификатор 1152→256→47 завершает модель EMNIST. Всего 447 247 обучаемых параметров.
 
-Training defaults: Adam, learning rate 0.001, weight decay 0.0001, batch size 128,
-up to 30 epochs, label smoothing 0.1, gradient clipping at norm 1.0.
-ReduceLROnPlateau monitors validation loss. A checkpoint is saved on strictly
-lower validation loss; five epochs without improvement stop training.
+Настройки по умолчанию: Adam, скорость обучения 0.001, weight decay 0.0001, батч 128, до 30 эпох, сглаживание меток 0.1 и ограничение нормы градиента до 1.0. ReduceLROnPlateau отслеживает потери на валидации. Модель сохраняется при строго меньших валидационных потерях; пять эпох без улучшения останавливают обучение.
 
-The training loader drops the final incomplete batch because the classifier's
-BatchNorm layer requires more than one example in training mode. Validation and
-test use every example. Exact numerical equality across hardware/library versions
-is not guaranteed by fixed random seeds.
+Последний неполный обучающий батч пропускается, поскольку BatchNorm классификатора требует более одного примера в режиме обучения. Валидация и тест используют все примеры. Фиксация случайных состояний не гарантирует полного численного совпадения между разными устройствами и версиями библиотек.
 
-## Evaluation protocol
+## Протокол оценки
 
-1. Use only training data for gradients.
-2. Use the independent validation subset for scheduler, early stopping, and
-   hyperparameter/model selection.
-3. Freeze the selected checkpoint.
-4. Evaluate once on the official test split.
-5. Report test accuracy, macro F1, per-class precision/recall/F1/support, and a
-   count-based confusion matrix. Keep class-index mapping next to matrix files.
-6. Retain configuration, seed, software versions, checkpoint hash, split indices,
-   and epoch history with the experiment.
+1. Градиенты вычисляются только по обучающим данным.
+2. Отдельная валидационная выборка используется для изменения скорости обучения, ранней остановки и выбора гиперпараметров.
+3. Выбранная модель фиксируется.
+4. Финальная оценка выполняется один раз на официальном тесте.
+5. Сохраняются точность, macro F1, precision/recall/F1 и число примеров по классам, а также матрица ошибок с абсолютными количествами. Рядом записывается порядок меток.
+6. Вместе с экспериментом сохраняются настройки, seed, версии библиотек, хеш модели, индексы выборок и история по эпохам.
 
-Training/validation loss includes configured label smoothing. Test loss is plain
-cross entropy and is labeled explicitly; those loss values are not directly
-interchangeable. Accuracy is stored on a 0–1 scale.
+Потери обучения и валидации включают настроенное сглаживание меток. Потери теста — обычная кросс-энтропия с явным указанием этого определения. Эти значения потерь нельзя напрямую отождествлять. Точность записывается в диапазоне 0–1.
 
-## Historical observations
+## Исторические наблюдения
 
-Saved logs show May EMNIST accuracy 88.88%, June EMNIST accuracy 88.63%, and an
-earlier TensorFlow MNIST test output of 99.26%. The text excerpts are in
-[evidence/](evidence/); the code is in [the archive](../notebooks/archive/).
+Сохранённые журналы содержат точность 88,88% для майской копии EMNIST, 88,63% для июньской и 99,26% для раннего варианта TensorFlow на MNIST. Текстовые фрагменты находятся в [evidence/](evidence/), код — в [архиве](../notebooks/archive/).
 
-The EMNIST scores were selected on the official test split. The original pipeline
-also lacked upright orientation correction, so historical inference on upright
-user images could disagree with dataset preprocessing. These are historical
-observations and methodological limitations, not current benchmark claims.
-No recovered checkpoint permits independent verification of those logs.
+В EMNIST модель выбиралась по официальному тесту. В исходной предобработке также отсутствовало исправление ориентации, поэтому работа с обычными пользовательскими изображениями могла отличаться от работы с датасетом. Это исторические наблюдения и ограничения методики, а не текущие подтверждённые результаты. Готовые веса для независимой проверки журналов не найдены.
 
-## New experiment results
+## Результаты новой версии
 
-**Pending.** Full dataset training and final evaluation of the refactored pipeline
-have not been run. No new accuracy, F1, or confusion matrix is claimed.
+**Ожидают запуска.** Полное обучение и финальная оценка переработанной версии на датасете не проводились. Новые значения точности, F1 и матрица ошибок не заявляются.
 
-Offline tests verify behavior on synthetic inputs and a minimal gradient step.
-They cannot establish handwriting-recognition quality. See [validation](VALIDATION.md).
+Автономные тесты проверяют поведение на синтетических входах и минимальный шаг обучения. По ним нельзя оценить качество распознавания почерка. См. [описание проверок](VALIDATION.md).
 
-## Hyperparameter investigation
+## Исследование гиперпараметров
 
-The implemented eight-trial grid varies learning rate (0.001/0.0003), classifier
-dropout (0.3/0.5), and augmentation (on/off), holding the seed and split fixed.
-Select by validation loss; do not repeatedly evaluate test performance per trial.
-For a fuller study, repeat the chosen configuration across multiple seeds and
-report mean and dispersion before assessing stability.
+Реализована сетка из восьми экспериментов: скорость обучения 0.001/0.0003, dropout классификатора 0.3/0.5 и аугментации включены/выключены. Seed и разделение данных фиксированы.
 
-No ablation or grid-search result is reported until the experiments are executed.
+Выбор выполняется по потерям на валидации. Оценивать тест на каждом варианте для выбора гиперпараметров не следует. Для более полного исследования выбранную конфигурацию можно повторить с несколькими seed и указать среднее и разброс метрик.
 
-## User-image inference and limitations
+Результаты сравнения и абляций не публикуются до выполнения экспериментов.
 
-Inference handles EXIF orientation and transparency, estimates background polarity,
-crops the foreground, resizes while preserving aspect ratio, and centers into a
-28×28 canvas. This preprocessing differs from curated benchmark preparation.
-Photographs, shadows, noise, unusual stroke widths, and touching characters can
-cause errors. Inspect the preprocessed image and use a polarity override if needed.
+## Пользовательские изображения и ограничения
 
-Softmax scores are not calibrated probabilities of correctness. A closed-set
-classifier always selects a known class even for an unseen symbol; blank-image
-rejection is only a preprocessing check, not general out-of-distribution detection.
+Распознавание учитывает EXIF-ориентацию и прозрачность, оценивает полярность фона, выделяет символ, изменяет размер с сохранением пропорций и размещает его по центру поля 28×28. Эта подготовка отличается от подготовки эталонных изображений датасета.
 
-## Next measurable steps
+Фотографии, тени, шум, необычная толщина штрихов и соприкасающиеся символы могут приводить к ошибкам. Проверяйте подготовленное изображение и при необходимости задавайте полярность явно.
 
-- Execute a baseline EMNIST training run and retain its artifacts.
-- Run the validation-only grid; freeze and evaluate the selected checkpoint.
-- Inspect the largest off-diagonal confusion pairs without inventing their causes.
-- Build a consented, separate user-image evaluation set for domain-shift analysis.
-- Consider writer-aware evaluation if writer identifiers become available.
+Оценки softmax не откалиброваны как вероятность правильного ответа. Классификатор всегда выбирает известный класс, даже если подан неизвестный символ. Отбрасывание пустых изображений — только проверка предобработки, а не полноценное обнаружение неизвестных данных.
+
+## Следующие измеримые шаги
+
+- Провести базовое обучение EMNIST и сохранить результаты запуска.
+- Выполнить сравнение гиперпараметров по валидации, зафиксировать выбранную модель и оценить её на тесте.
+- Исследовать наиболее частые пары ошибок, не приписывая им причины без проверки.
+- Собрать отдельный набор пользовательских изображений с разрешением владельцев для оценки переноса на реальные данные.
+- Рассмотреть разделение по авторам почерка, если появятся соответствующие идентификаторы.

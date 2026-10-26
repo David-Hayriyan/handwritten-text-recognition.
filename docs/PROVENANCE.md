@@ -1,78 +1,47 @@
-# Source provenance
+# Происхождение исходников
 
-## Recovered materials
+## Найденные материалы
 
-Three relevant notebooks were found in the author's connected Google Drive and read on 2026-10-27:
+27 октября 2026 года в подключённом Google Drive автора найдены и прочитаны три подходящих ноутбука:
 
-| Source title | Drive modification date | Contents |
+| Название исходного файла | Дата изменения в Drive | Содержимое |
 | --- | --- | --- |
-| handwriting_recognition.ipynb | 2026-05-31 | PyTorch CNN, EMNIST Balanced, 15-epoch output, inference and export cells |
-| handwriting_recognition (1).ipynb | 2026-06-15 | Same EMNIST architecture and another saved training log |
-| digit_recognizer_colab_2.ipynb | 2026-05-16 | TensorFlow/Keras CNN, MNIST, 8-epoch output, custom-image inference |
+| handwriting_recognition.ipynb | 31.05.2026 | CNN на PyTorch, EMNIST Balanced, вывод 15 эпох, распознавание и экспорт |
+| handwriting_recognition (1).ipynb | 15.06.2026 | Та же архитектура EMNIST и другой сохранённый журнал обучения |
+| digit_recognizer_colab_2.ipynb | 16.05.2026 | CNN на TensorFlow/Keras, MNIST, вывод 8 эпох, распознавание своих изображений |
 
-These dates are file metadata, not independently verified experiment execution dates.
-Private Drive IDs and links are omitted from the public repository.
+Даты взяты из метаданных файлов и не подтверждают время проведения экспериментов. Приватные идентификаторы и ссылки Google Drive в публичный репозиторий не включены.
 
-The referenced previous conversation contained no usable implementation attachments.
-No matching recognition repository was found among the accessible repositories for
-David-Hayriyan. No pretrained checkpoint or exported project archive was recovered
-in the searches performed; saved notebook output merely mentions such files.
+В доступном фрагменте предыдущего чата не было пригодных вложений с реализацией. Среди доступных репозиториев David-Hayriyan соответствующий проект распознавания не найден. В ходе выполненного поиска не удалось получить готовые веса или экспортированный архив проекта: такие файлы только упоминаются в выводе ноутбуков.
 
-## What was preserved
+## Что сохранено
 
-- The five-convolution PyTorch model was extracted from the May EMNIST notebook.
-  Its module names, BatchNorm layers, tensor dimensions, and original initialization
-  are retained; class count and classifier dropout are configurable.
-- Cleaned May EMNIST and MNIST notebooks are in notebooks/archive/.
-- Historical training stdout is preserved in docs/evidence/. Numbers were not
-  generated or rerun during this preparation.
-- The June EMNIST copy provides a second log, not an additional independent
-  verification of the May run.
-- source_manifest.json fingerprints the locally materialized, formatted JSON
-  source snapshots. Those hashes are not claimed to be hashes of the original
-  Drive byte streams or of the cleaned public notebooks.
+- Архитектура PyTorch с пятью свёртками извлечена из майского ноутбука EMNIST. Сохранены имена модулей, слои BatchNorm, размерности и исходная инициализация; число классов и dropout классификатора сделаны настраиваемыми.
+- Очищенные майский ноутбук EMNIST и ранний ноутбук MNIST размещены в notebooks/archive/.
+- Исторический текстовый вывод обучения сохранён в docs/evidence/. Его числа не генерировались заново и не получены повторным запуском при подготовке портфолио.
+- Июньская копия EMNIST содержит второй журнал, но не является независимой проверкой майского эксперимента.
+- source_manifest.json содержит SHA-256 локально сохранённых и отформатированных JSON-копий исходников. Это не контрольные суммы исходных байтов из Drive или очищенных публичных ноутбуков.
 
-Archive cleaning removes embedded image outputs, all remaining outputs, execution
-counts, and Colab-specific metadata. For EMNIST, export/download cells 11–12 were
-omitted. Source code in the remaining cells is preserved, including historical
-limitations. Local /content/ paths are retained for context. Archived notebooks
-are reference material rather than maintained entry points.
+Из архивных ноутбуков удалены встроенные изображения, остальные выводы, счётчики выполнения и метаданные Colab. В EMNIST также опущены ячейки 11–12 с экспортом и скачиванием. Код остальных ячеек сохранён, включая его исторические ограничения. Пути /content/ оставлены для контекста. Архив служит справочным материалом; для запуска новой версии используйте основной ноутбук или пакет htr.
 
-## Newly implemented with Codex assistance
+## Что реализовано заново с помощью Codex
 
-The htr modules, tests, English README/report, and main Colab notebook were created
-or refactored for this portfolio publication. They are not represented as code
-already present in the coursework.
+Модули htr, тесты, документация и основной Colab-ноутбук созданы или переработаны для публикации в портфолио. Они не представлены как код, уже присутствовавший в учебной работе.
 
-Changes include train/validation separation, upright EMNIST orientation, independent
-deterministic validation transforms, early stopping, versioned checkpoints,
-run metadata, JSON inference, robust image preprocessing, per-class metrics,
-a confusion matrix, and a validation-only experiment grid.
+Добавлены отдельные обучающая и валидационная выборки, исправление ориентации EMNIST, независимые преобразования для валидации, ранняя остановка, версионированный формат сохранённой модели, сведения о запуске, вывод предсказаний в JSON, предобработка своих изображений, метрики по классам, матрица ошибок и исследование гиперпараметров только по валидации.
 
-New checkpoints deliberately require a format/preprocessing version and cannot
-silently load old coursework weights. Reusing an unknown legacy orientation could
-produce plausible but incorrect predictions.
+Новые модели проверяют версию формата и предобработки. Старые веса не загружаются автоматически: несовпадающая ориентация может привести к внешне правдоподобным, но неправильным ответам.
 
-## Evidence limits
+## Границы подтверждений
 
-The original EMNIST loop passed test_loader to validate() every epoch, used its
-loss for ReduceLROnPlateau, and selected checkpoints by its accuracy. Historical
-88.88% and 88.63% therefore reflect test-informed model selection.
+В исходном цикле EMNIST test_loader передавался в validate() на каждой эпохе. Его потери использовались планировщиком ReduceLROnPlateau, а точность — для выбора лучшей модели. Поэтому исторические 88,88% и 88,63% получены с использованием теста при выборе модели.
 
-The TensorFlow notebook records 0.9926 test accuracy after an eight-epoch fit.
-That is a historical output observation, not an independently verified model score.
-Neither its weights nor a complete experiment environment were recovered.
+TensorFlow-ноутбук содержит вывод с точностью 0.9926 на тесте после восьми эпох. Это наблюдение по сохранённому выводу, а не независимо проверенная оценка модели. Веса и полное окружение эксперимента не найдены.
 
-No full dataset training, hyperparameter study, or final test evaluation of the
-new implementation has been performed during project preparation. Offline tests
-are described in VALIDATION.md. Original files remain in the private workspace;
-only the cleaned relevant materials are published.
+Полное обучение, исследование гиперпараметров и финальная оценка новой реализации на датасете во время подготовки проекта не проводились. Автономные проверки описаны в VALIDATION.md. Исходные файлы остаются в приватном рабочем каталоге; опубликованы только очищенные материалы, относящиеся к проекту.
 
-## Rights and attribution
+## Права и указание авторства
 
-The user supplied the coursework context and authorized publication under
-David-Hayriyan. This repository does not establish third-party ownership or assign
-a new license to any pre-existing third-party material. Dataset files and embedded
-sample/user images are excluded. PyTorch, Torchvision, NumPy, Pillow, Matplotlib,
-and scikit-learn retain their own licenses. Consult the linked dataset providers
-before redistributing data.
+Пользователь предоставил контекст учебной работы и разрешил публикацию под аккаунтом David-Hayriyan. Репозиторий не устанавливает принадлежность сторонних материалов и не назначает им новую лицензию. Файлы датасетов и встроенные изображения примеров или пользователя исключены.
+
+PyTorch, Torchvision, NumPy, Pillow, Matplotlib и scikit-learn сохраняют собственные лицензии. Перед распространением данных необходимо ознакомиться с условиями их поставщиков.

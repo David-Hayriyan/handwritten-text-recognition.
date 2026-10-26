@@ -1,52 +1,53 @@
-# Handwritten Text Recognition
+# Распознавание рукописного текста
 
-**A PyTorch portfolio project for classifying isolated handwritten digits and Latin letters.**
+**Портфолио-проект на PyTorch для классификации отдельных рукописных цифр и латинских букв.**
 
-Built from David Hayriyan's coursework, *“Система распознавания рукописного текста на основе нейронных сетей”* (Neural Network–Based Handwritten Text Recognition System). The recovered CNN is now accompanied by a reproducible training pipeline, an independent validation split, early stopping, evaluation tools, and image inference.
+Проект основан на учебной работе Давида Айрияна «Система распознавания рукописного текста на основе нейронных сетей». Найденная архитектура CNN дополнена воспроизводимым обучением, отдельной валидационной выборкой, ранней остановкой, оценкой качества и распознаванием пользовательских изображений.
 
-[Open in Colab](https://colab.research.google.com/github/David-Hayriyan/handwritten-text-recognition./blob/main/notebooks/Handwritten_Text_Recognition.ipynb) · [Technical report](docs/REPORT.md) · [Source provenance](docs/PROVENANCE.md)
+[Открыть в Colab](https://colab.research.google.com/github/David-Hayriyan/handwritten-text-recognition./blob/main/notebooks/Handwritten_Text_Recognition.ipynb) · [Технический отчёт](docs/REPORT.md) · [Происхождение исходников](docs/PROVENANCE.md)
 
-> **Status:** recovered coursework + refactored implementation. The refactored model has not been trained or benchmarked on EMNIST/MNIST during this preparation. No pretrained weights are included. Historical notebook logs are preserved and clearly distinguished from new results.
+> **Статус:** восстановленная учебная работа и переработанная реализация. Во время подготовки портфолио новая версия не обучалась и не оценивалась на EMNIST/MNIST. Готовых весов модели в репозитории нет. Сохранённые журналы учебных экспериментов представлены отдельно от результатов новой версии.
 
-## What it does
+## Возможности
 
-- Classifies one isolated character per image, with top-k scores.
-- Supports EMNIST Balanced (47 classes) and MNIST (10 digits).
-- Uses seeded, stratified train/validation splitting, training-only augmentation, Adam, a learning-rate scheduler, and early stopping.
-- Saves the best model by validation loss, epoch metrics, split indices, configuration, and environment details.
-- Produces test accuracy, macro F1, per-class precision/recall/F1, learning curves, and a confusion matrix.
-- Provides an eight-trial validation-only hyperparameter grid and offline pipeline tests.
+- Распознавание одного символа на изображении с выводом нескольких наиболее вероятных классов.
+- Поддержка EMNIST Balanced — 47 классов — и MNIST — 10 цифр.
+- Воспроизводимое стратифицированное разделение на обучающую и валидационную выборки.
+- Аугментации только при обучении, оптимизатор Adam, изменение скорости обучения и ранняя остановка.
+- Сохранение лучшей модели по функции потерь на валидации, метрик по эпохам, индексов выборок, настроек и сведений об окружении.
+- Расчёт точности, macro F1, precision/recall/F1 по классам; построение кривых обучения и матрицы ошибок.
+- Сравнение восьми комбинаций гиперпараметров по валидационной выборке и автономные тесты.
 
-This is a character classifier. Word/line recognition, Cyrillic, text detection, segmentation, and document OCR are outside its scope.
+Модель классифицирует отдельные символы. Распознавание слов и строк, кириллицы, поиск текста на странице, сегментация и полноценный OCR документов в проект не входят.
 
-## Dataset
+## Данные
 
-| Dataset | Classes | Official training set | Validation held out | Training remainder | Official test set |
+| Набор данных | Классов | Исходная обучающая выборка | Отложено для валидации | Осталось для обучения | Официальный тест |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| EMNIST Balanced | 47 | 112,800 | 11,280 | 101,520 | 18,800 |
-| MNIST | 10 | 60,000 | ≈6,000 | ≈54,000 | 10,000 |
+| EMNIST Balanced | 47 | 112 800 | 11 280 | 101 520 | 18 800 |
+| MNIST | 10 | 60 000 | ≈6 000 | ≈54 000 | 10 000 |
 
-Counts use the default 10% stratified holdout, rounded within each class; MNIST holdout counts are approximate. EMNIST Balanced merges several visually similar uppercase/lowercase classes; it does not provide 62 distinct alphanumeric classes. The mapping is `0–9, A–Z, a b d e f g h n q r t`. See [NIST EMNIST](https://www.nist.gov/itl/products-and-services/emnist-dataset) and the [Torchvision dataset implementation](https://docs.pytorch.org/vision/stable/_modules/torchvision/datasets/mnist.html).
+По умолчанию для валидации откладывается 10% примеров каждого класса с округлением; размеры валидационной и обучающей частей MNIST указаны приблизительно. В EMNIST Balanced некоторые похожие прописные и строчные буквы объединены, поэтому отдельных классов 47, а не 62. Порядок меток: `0–9, A–Z, a b d e f g h n q r t`. Источники: [описание EMNIST от NIST](https://www.nist.gov/itl/products-and-services/emnist-dataset) и [реализация загрузчиков Torchvision](https://docs.pytorch.org/vision/stable/_modules/torchvision/datasets/mnist.html).
 
-Datasets are downloaded on demand with `--download` and kept in ignored `data/`. Dataset files and extracted sample images are not shipped. EMNIST's download archive is large and extraction needs additional disk space.
+Данные скачиваются по запросу с параметром `--download` и сохраняются в исключённую из Git папку `data/`. Сами наборы данных и извлечённые из них изображения в репозиторий не включены. Архив EMNIST большой; для распаковки потребуется дополнительное место на диске.
 
-**Preprocessing:** transpose raw EMNIST images to upright orientation; use 28×28 grayscale input; scale to [0,1]; normalize using fixed mean 0.1307 and standard deviation 0.3081 inherited from the coursework. These are MNIST constants, not statistics estimated from EMNIST. Training augmentation applies rotation up to 10° and translation up to 10%. Validation and test receive no random augmentation.
+**Предобработка:** изображения EMNIST транспонируются в обычную ориентацию; используется один канал и размер 28×28; значения переводятся в [0,1] и нормализуются с фиксированными средним 0.1307 и стандартным отклонением 0.3081 из учебной работы. Это константы MNIST, а не статистики, вычисленные по EMNIST. При обучении применяются повороты до 10° и сдвиги до 10%. Валидация и тест не используют случайные аугментации.
 
-## Architecture
+## Архитектура
 
-| Stage | Layers | Output per image |
+| Этап | Слои | Размер выхода для одного изображения |
 | --- | --- | --- |
-| Input | Grayscale | 1 × 28 × 28 |
-| Block 1 | Conv 1→32, BN, ReLU; Conv 32→32, BN, ReLU; MaxPool; Dropout2d | 32 × 14 × 14 |
-| Block 2 | Conv 32→64, BN, ReLU; Conv 64→64, BN, ReLU; MaxPool; Dropout2d | 64 × 7 × 7 |
-| Block 3 | Conv 64→128, BN, ReLU; MaxPool; Dropout2d | 128 × 3 × 3 |
-| Classifier | Flatten → Linear 1152→256 → BN → ReLU → Dropout → Linear | 47 or 10 logits |
+| Вход | Оттенки серого | 1 × 28 × 28 |
+| Блок 1 | Conv 1→32, BN, ReLU; Conv 32→32, BN, ReLU; MaxPool; Dropout2d | 32 × 14 × 14 |
+| Блок 2 | Conv 32→64, BN, ReLU; Conv 64→64, BN, ReLU; MaxPool; Dropout2d | 64 × 7 × 7 |
+| Блок 3 | Conv 64→128, BN, ReLU; MaxPool; Dropout2d | 128 × 3 × 3 |
+| Классификатор | Flatten → Linear 1152→256 → BN → ReLU → Dropout → Linear | 47 или 10 логитов |
 
-All convolutions use 3×3 kernels and padding 1. Convolutional dropout is 0.25; classifier dropout defaults to 0.5. The 47-class network has **447,247 trainable parameters**, matching the recovered architecture. Cross entropy uses label smoothing 0.1 for training/validation; final test loss uses ordinary cross entropy.
+Все свёртки имеют ядро 3×3 и дополнение границ padding=1. Dropout в свёрточных блоках равен 0.25, в классификаторе по умолчанию — 0.5. Версия на 47 классов содержит **447 247 обучаемых параметров**, как и восстановленная архитектура. При обучении и валидации используется кросс-энтропия со сглаживанием меток 0.1; на финальном тесте — обычная кросс-энтропия.
 
-## Run locally
+## Локальный запуск
 
-Use **Python 3.12** and a fresh environment. From a terminal:
+Используйте **Python 3.12** и отдельное виртуальное окружение:
 
 ```bash
 git clone https://github.com/David-Hayriyan/handwritten-text-recognition..git handwritten-text-recognition
@@ -54,7 +55,7 @@ cd handwritten-text-recognition
 python -m venv .venv
 ```
 
-Activate it:
+Активируйте окружение:
 
 ```powershell
 # Windows PowerShell
@@ -66,7 +67,7 @@ Activate it:
 source .venv/bin/activate
 ```
 
-Install the CPU build and pinned dependencies:
+Установите CPU-версию PyTorch и зависимости с закреплёнными версиями:
 
 ```bash
 python -m pip install --upgrade pip
@@ -74,87 +75,89 @@ python -m pip install torch==2.14.1 torchvision==0.29.1 --index-url https://down
 python -m pip install -r requirements-dev.txt
 ```
 
-For NVIDIA GPU environments, select an appropriate build from the [official PyTorch installer](https://pytorch.org/get-started/locally/). CPU execution is supported. GPU results and runtime have not been verified for this refactor.
+Для NVIDIA GPU выберите подходящую сборку в [официальном установщике PyTorch](https://pytorch.org/get-started/locally/). Выполнение на CPU поддерживается. Работа новой версии на GPU и время её обучения не проверялись.
 
-Train and visualize:
+Обучите модель и постройте графики:
 
 ```bash
 python -m htr.train --dataset emnist-balanced --download --epochs 30 --patience 5 --output runs/emnist-baseline
 python -m htr.plot_history --run runs/emnist-baseline
 ```
 
-For a smaller digits-only dataset, replace `--dataset emnist-balanced` with `--dataset mnist` and choose a fresh output directory.
+Для задачи только с цифрами замените `--dataset emnist-balanced` на `--dataset mnist` и задайте новую папку результатов.
 
-Training never reads the official test split. The last incomplete training batch is dropped to avoid singleton BatchNorm batches; shuffling changes the omitted examples each epoch. Existing run folders are rejected to preserve previous work.
+Обучение не обращается к официальной тестовой выборке. Последний неполный обучающий батч пропускается, чтобы BatchNorm не получил батч из одного примера; из-за перемешивания пропускаемые примеры меняются по эпохам. Существующие папки результатов не перезаписываются.
 
-After choosing a model using validation only, evaluate its frozen checkpoint:
+Выберите модель по валидации, зафиксируйте её и выполните финальную оценку:
 
 ```bash
 python -m htr.evaluate --checkpoint runs/emnist-baseline/best.pt --download --output runs/emnist-test
 ```
 
-## Predict your own image
+## Распознавание своего изображения
 
-After training, save a single upright character on a plain background outside the repository and run:
+После обучения сохраните изображение одного отдельно написанного символа вне репозитория и выполните:
 
 ```bash
 python -m htr.predict --checkpoint runs/emnist-baseline/best.pt --image ../my-character.png --top-k 5 --save-preprocessed runs/input-28x28.png
 ```
 
-The command prints JSON with characters, class indices, and softmax scores. It crops the foreground, preserves aspect ratio, fits the glyph into 20×20, and centers it on a 28×28 canvas. Inspect the saved input to diagnose preprocessing problems. See [the inference guide](examples/README.md).
+Команда выводит JSON с символами, индексами классов и оценками softmax. Предобработка выделяет символ, сохраняет его пропорции, вписывает в область 20×20 и размещает по центру поля 28×28. При ошибках распознавания проверьте сохранённое изображение входа. Подробнее — в [инструкции](examples/README.md).
 
-Auto polarity uses the image border; override it with `--polarity dark-on-light` or `--polarity light-on-dark`. Softmax scores are not calibrated confidence estimates. Performance on phone photos, unusual handwriting, or unseen symbols is unknown.
+Полярность автоматически определяется по краям изображения. Её можно задать явно: `--polarity dark-on-light` для тёмного символа на светлом фоне или `--polarity light-on-dark` для обратного случая. Оценки softmax не являются откалиброванной уверенностью в правильности ответа. Качество на фотографиях с телефона, необычном почерке и неизвестных символах не измерено.
 
 ## Google Colab
 
-Open [the notebook](https://colab.research.google.com/github/David-Hayriyan/handwritten-text-recognition./blob/main/notebooks/Handwritten_Text_Recognition.ipynb) and run the setup and training cells. The supplied setup installs a CPU build. To use a GPU, select a GPU runtime and replace that install command with the matching official CUDA build. Evaluation is a separate explicit step. Upload your own character for inference after a checkpoint exists. Download run artifacts before ending the temporary Colab session.
+Откройте [ноутбук](https://colab.research.google.com/github/David-Hayriyan/handwritten-text-recognition./blob/main/notebooks/Handwritten_Text_Recognition.ipynb) и выполните ячейки установки и обучения. Готовая ячейка установки использует CPU-сборку. Для GPU выберите соответствующую среду Colab и замените команду установки на подходящую официальную CUDA-сборку.
 
-The notebook is intentionally delivered without executed outputs. Its code imports the same modules as local runs.
+Финальная оценка вынесена в отдельный шаг. После появления сохранённой модели можно загрузить своё изображение для распознавания. Скачайте результаты до завершения временной сессии Colab.
 
-## Results and evidence
+Ноутбук опубликован без выполненных выводов. Он использует те же модули, что и локальный запуск. В среде Colab во время подготовки проекта он не запускался.
 
-| Implementation | Recorded accuracy | Interpretation |
+## Результаты и подтверждения
+
+| Реализация | Точность в сохранённом выводе | Как интерпретировать |
 | --- | ---: | --- |
-| Historical PyTorch EMNIST notebook, May copy | 88.88% | Saved log, selected using the official test split |
-| Historical PyTorch EMNIST notebook, June copy | 88.63% | Saved log, selected using the official test split |
-| Historical TensorFlow MNIST baseline | 99.26% | Saved test-evaluation output; no recovered checkpoint or independent rerun |
-| Refactored PyTorch pipeline | Pending | Requires dataset training and held-out test evaluation |
+| Учебный PyTorch-ноутбук EMNIST, майская копия | 88,88% | Исторический журнал; модель выбиралась по официальному тесту |
+| Учебный PyTorch-ноутбук EMNIST, июньская копия | 88,63% | Исторический журнал; модель выбиралась по официальному тесту |
+| Ранний TensorFlow-вариант на MNIST | 99,26% | Сохранённый вывод оценки на тесте; веса не найдены, повторного запуска не было |
+| Переработанная версия на PyTorch | Ожидает запуска | Требует обучения на данных и финальной оценки на отложенном тесте |
 
-Historical numbers come from [preserved log excerpts](docs/evidence/). They are **not independently reproduced benchmark results**. In the original EMNIST loop, the official test set was called “validation” and influenced checkpoint selection and the scheduler. Its accuracy is therefore not an untouched final-test estimate. The revised orientation and evaluation protocol also make direct comparisons inappropriate.
+Источники чисел — [сохранённые фрагменты журналов](docs/evidence/). Это **не результаты независимого повторного эксперимента**. В исходном цикле EMNIST официальный тест назывался валидацией и влиял на выбор модели и скорость обучения. Поэтому эти значения нельзя считать оценкой на нетронутом финальном тесте. В новой версии также изменены ориентация изображений и протокол оценки, что мешает прямому сравнению.
 
-No metrics, confusion-matrix image, or learning-curve image from an unperformed new experiment are presented as results. See [the report](docs/REPORT.md) for the evaluation protocol and pending experiments.
+Метрики, матрицы ошибок и кривые обучения не проведённых новых экспериментов не выдаются за результаты. Протокол оценки и план исследований описаны в [отчёте](docs/REPORT.md).
 
-## Hyperparameter study
+## Исследование гиперпараметров
 
 ```bash
 python -m htr.experiments --dataset emnist-balanced --download --epochs 30 --output runs/grid
 ```
 
-This runs 2 learning rates × 2 dropout rates × augmentation on/off with the same seed and split. Compare `validation_comparison.csv`, choose a checkpoint using validation loss, then perform final test evaluation once. The grid is implemented; it has not been run on the dataset.
+Будут проверены две скорости обучения × два значения dropout × включённые/отключённые аугментации. Seed и разделение данных одинаковы. Сравните `validation_comparison.csv`, выберите модель по потерям на валидации, затем один раз выполните финальную оценку на тесте. Код исследования готов; само исследование на датасете ещё не проводилось.
 
-## Project layout
+## Структура проекта
 
 ```text
-htr/                    # model, data, training, inference, evaluation, experiments
+htr/                    # модель, данные, обучение, распознавание, оценка и эксперименты
 notebooks/
   Handwritten_Text_Recognition.ipynb
-  archive/              # cleaned recovered coursework sources
+  archive/              # очищенные исходники учебной работы
 docs/
-  REPORT.md             # technical report and evaluation plan
-  PROVENANCE.md         # recovered sources, changes, and evidence boundaries
-  VALIDATION.md         # checks actually performed during preparation
-  evidence/             # historical text logs and source fingerprints
-examples/               # user-image inference guide
-tests/                  # offline behavior and pipeline checks
-requirements*.txt       # pinned runtime and development dependencies
+  REPORT.md             # технический отчёт и протокол оценки
+  PROVENANCE.md         # происхождение материалов и границы подтверждений
+  VALIDATION.md         # фактически выполненные проверки
+  evidence/             # исторические текстовые журналы и контрольные суммы
+examples/               # инструкция для пользовательского изображения
+tests/                  # автономные проверки поведения и полного цикла
+requirements*.txt       # закреплённые версии зависимостей
 ```
 
-Run checks with `python -m pytest -q`. Tests use synthetic data, never download datasets, and do not establish recognition accuracy.
+Запуск тестов: `python -m pytest -q`. Они используют синтетические данные, не скачивают датасеты и не измеряют качество распознавания. При подготовке проекта все 11 тестов прошли локально; первый запуск GitHub Actions также завершился успешно. Текущий статус доступен во вкладке Actions.
 
-## Author and provenance
+## Автор и происхождение проекта
 
-**David Hayriyan — [David-Hayriyan](https://github.com/David-Hayriyan)**
+**Давид Айриян — [David-Hayriyan](https://github.com/David-Hayriyan)**
 
-The architecture and historical baseline were recovered from the author's existing coursework materials. The modular pipeline, tests, English documentation, and Colab entry point were prepared with Codex assistance in October 2026. See [provenance](docs/PROVENANCE.md) for exactly what was recovered and what was newly implemented.
+Архитектура и исторические исходники найдены в существующих учебных материалах автора. Модульная структура, тесты, документация и основной Colab-ноутбук подготовлены с помощью Codex в октябре 2026 года. В [описании происхождения](docs/PROVENANCE.md) указано, что восстановлено, а что реализовано заново.
 
-Dataset and dependency rights remain with their respective owners. No dataset, private user image, secret, credential, or pretrained model is included. No blanket license is assigned to recovered materials in this publication.
+Права на датасеты и зависимости принадлежат их правообладателям. В репозитории нет самих датасетов, личных изображений пользователя, секретов, учётных данных или готовой модели. Единая новая лицензия на восстановленные материалы не назначалась.
